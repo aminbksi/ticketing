@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import { body, validationResult } from "express-validator";
+import jwt from "jsonwebtoken";
 import { BadRequestError, RequestValidationError, User } from "../core";
 
 const MIN_PASSWORD_CHARACTER = 4;
@@ -35,6 +36,18 @@ api.post(
 
     const user = User.build({ email, password });
     await user.save();
+
+    const token = jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+      },
+      "asdfg"
+    );
+
+    request.session = {
+      jwt: token,
+    };
 
     response.status(201).send(user);
   }

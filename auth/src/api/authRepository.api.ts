@@ -42,7 +42,7 @@ api.post(
         id: user.id,
         email: user.email,
       },
-      "asdfg"
+      process.env.JWT_KEY!
     );
 
     request.session = {

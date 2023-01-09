@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import { body, validationResult } from "express-validator";
-import { DatabaseConnectionError, RequestValidationError } from "../core";
+import { BadRequestError, RequestValidationError, User } from "../core";
 
 const MIN_PASSWORD_CHARACTER = 4;
 const MAX_PASSWORD_CHARACTER = 20;
@@ -20,16 +20,23 @@ api.post(
       .isLength({ min: MIN_PASSWORD_CHARACTER, max: MAX_PASSWORD_CHARACTER })
       .withMessage("Password should be between 4 and 20"),
   ],
-  (request: Request, response: Response) => {
+  async (request: Request, response: Response) => {
     const errors = validationResult(request);
     if (!errors.isEmpty()) {
       throw new RequestValidationError(errors.array());
     }
 
-    console.log("Creating user...");
-    throw new DatabaseConnectionError();
+    const { email, password } = request.body;
 
-    response.send({});
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      throw new BadRequestError("This email is already in use");
+    }
+
+    const user = User.build({ email, password });
+    await user.save();
+
+    response.status(201).send(user);
   }
 );
 

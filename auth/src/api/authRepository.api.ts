@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import { body } from "express-validator";
 import jwt from "jsonwebtoken";
 import {
+  authRequired,
   BadRequestError,
   isCorrectPassword,
   User,
@@ -17,6 +18,7 @@ const api = express.Router();
 api.get(
   "/api/users/current-user",
   validateUser,
+  authRequired,
   (request: Request, response: Response) => {
     response.send({ currentUser: request.currentUser || null });
   }

@@ -1,9 +1,9 @@
 import express, { Request, Response } from "express";
-import { body, validationResult } from "express-validator";
+import { body } from "express-validator";
 import jwt from "jsonwebtoken";
 import {
   BadRequestError,
-  RequestValidationError,
+  isCorrectPassword,
   User,
   validateRequest,
 } from "../core";
@@ -64,7 +64,33 @@ api.get(
       .withMessage("You must supply a password"),
   ],
   validateRequest,
-  (request: Request, response: Response) => {}
+  async (request: Request, response: Response) => {
+    const { email, password } = request.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw new BadRequestError("Bad Credentials");
+    }
+
+    const isPasswordMatch = await isCorrectPassword(user.password, password);
+    if (!isPasswordMatch) {
+      throw new BadRequestError("Bad Credentials");
+    }
+
+    const token = jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+      },
+      process.env.JWT_KEY!
+    );
+
+    request.session = {
+      jwt: token,
+    };
+
+    response.status(201).send(user);
+  }
 );
 
 api.get("/api/users/signout", (req, res) => {

@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import { body, validationResult } from "express-validator";
-import { RequestValidationError, User } from "../core";
+import { BadRequestError, RequestValidationError, User } from "../core";
 
 const MIN_PASSWORD_CHARACTER = 4;
 const MAX_PASSWORD_CHARACTER = 20;
@@ -30,8 +30,7 @@ api.post(
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      console.log("There is already an account with this email address");
-      return response.send({});
+      throw new BadRequestError("This email is already in use");
     }
 
     const user = User.build({ email, password });

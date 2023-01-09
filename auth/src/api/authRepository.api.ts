@@ -1,16 +1,28 @@
 import express, { Request, Response } from "express";
-import { body, validationResult } from "express-validator";
+import { body } from "express-validator";
 import jwt from "jsonwebtoken";
-import { BadRequestError, RequestValidationError, User } from "../core";
+import {
+  authRequired,
+  BadRequestError,
+  isCorrectPassword,
+  User,
+  validateRequest,
+  validateUser,
+} from "../core";
 
 const MIN_PASSWORD_CHARACTER = 4;
 const MAX_PASSWORD_CHARACTER = 20;
 
 const api = express.Router();
 
-api.get("/api/users/current-user", (req, res) => {
-  res.send("current user");
-});
+api.get(
+  "/api/users/current-user",
+  validateUser,
+  authRequired,
+  (request: Request, response: Response) => {
+    response.send({ currentUser: request.currentUser || null });
+  }
+);
 
 api.post(
   "/api/users/signup",
@@ -21,12 +33,8 @@ api.post(
       .isLength({ min: MIN_PASSWORD_CHARACTER, max: MAX_PASSWORD_CHARACTER })
       .withMessage("Password should be between 4 and 20"),
   ],
+  validateRequest,
   async (request: Request, response: Response) => {
-    const errors = validationResult(request);
-    if (!errors.isEmpty()) {
-      throw new RequestValidationError(errors.array());
-    }
-
     const { email, password } = request.body;
 
     const existingUser = await User.findOne({ email });
@@ -53,12 +61,49 @@ api.post(
   }
 );
 
-api.get("/api/users/signin", (req, res) => {
-  res.send("signin");
-});
+api.get(
+  "/api/users/signin",
+  [
+    body("email").isEmail().withMessage("Email must be valid"),
+    body("password")
+      .trim()
+      .notEmpty()
+      .withMessage("You must supply a password"),
+  ],
+  validateRequest,
+  async (request: Request, response: Response) => {
+    const { email, password } = request.body;
 
-api.get("/api/users/signout", (req, res) => {
-  res.send("signout");
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw new BadRequestError("Bad Credentials");
+    }
+
+    const isPasswordMatch = await isCorrectPassword(user.password, password);
+    if (!isPasswordMatch) {
+      throw new BadRequestError("Bad Credentials");
+    }
+
+    const token = jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+      },
+      process.env.JWT_KEY!
+    );
+
+    request.session = {
+      jwt: token,
+    };
+
+    response.status(201).send(user);
+  }
+);
+
+api.get("/api/users/signout", (request: Request, response: Response) => {
+  request.session = null;
+
+  response.send({});
 });
 
 export { api };

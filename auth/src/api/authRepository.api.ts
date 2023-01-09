@@ -6,6 +6,7 @@ import {
   isCorrectPassword,
   User,
   validateRequest,
+  validateUser,
 } from "../core";
 
 const MIN_PASSWORD_CHARACTER = 4;
@@ -13,18 +14,13 @@ const MAX_PASSWORD_CHARACTER = 20;
 
 const api = express.Router();
 
-api.get("/api/users/current-user", (request: Request, response: Response) => {
-  if (!request.session?.jwt) {
-    return response.send({ currentUser: null });
+api.get(
+  "/api/users/current-user",
+  validateUser,
+  (request: Request, response: Response) => {
+    response.send({ currentUser: request.currentUser || null });
   }
-
-  try {
-    const currentUser = jwt.verify(request.session.jwt, process.env.JWT_KEY!);
-    response.send({ currentUser: currentUser });
-  } catch (err) {
-    response.send({ currentUser: null });
-  }
-});
+);
 
 api.post(
   "/api/users/signup",

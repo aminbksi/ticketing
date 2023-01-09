@@ -1,7 +1,12 @@
 import express, { Request, Response } from "express";
 import { body, validationResult } from "express-validator";
 import jwt from "jsonwebtoken";
-import { BadRequestError, RequestValidationError, User } from "../core";
+import {
+  BadRequestError,
+  RequestValidationError,
+  User,
+  validateRequest,
+} from "../core";
 
 const MIN_PASSWORD_CHARACTER = 4;
 const MAX_PASSWORD_CHARACTER = 20;
@@ -21,12 +26,8 @@ api.post(
       .isLength({ min: MIN_PASSWORD_CHARACTER, max: MAX_PASSWORD_CHARACTER })
       .withMessage("Password should be between 4 and 20"),
   ],
+  validateRequest,
   async (request: Request, response: Response) => {
-    const errors = validationResult(request);
-    if (!errors.isEmpty()) {
-      throw new RequestValidationError(errors.array());
-    }
-
     const { email, password } = request.body;
 
     const existingUser = await User.findOne({ email });
@@ -53,9 +54,18 @@ api.post(
   }
 );
 
-api.get("/api/users/signin", (req, res) => {
-  res.send("signin");
-});
+api.get(
+  "/api/users/signin",
+  [
+    body("email").isEmail().withMessage("Email must be valid"),
+    body("password")
+      .trim()
+      .notEmpty()
+      .withMessage("You must supply a password"),
+  ],
+  validateRequest,
+  (request: Request, response: Response) => {}
+);
 
 api.get("/api/users/signout", (req, res) => {
   res.send("signout");

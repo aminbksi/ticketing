@@ -102,8 +102,10 @@ api.get(
   }
 );
 
-api.get("/api/users/signout", (req, res) => {
-  res.send("signout");
+api.get("/api/users/signout", (request: Request, response: Response) => {
+  request.session = null;
+
+  response.send({});
 });
 
 export { api };

@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import { body, validationResult } from "express-validator";
+import { DatabaseConnectionError, RequestValidationError } from "../core";
 
 const MIN_PASSWORD_CHARACTER = 4;
 const MAX_PASSWORD_CHARACTER = 20;
@@ -22,10 +23,11 @@ api.post(
   (request: Request, response: Response) => {
     const errors = validationResult(request);
     if (!errors.isEmpty()) {
-      return response.status(400).send(errors.array());
+      throw new RequestValidationError(errors.array());
     }
 
     console.log("Creating user...");
+    throw new DatabaseConnectionError();
 
     response.send({});
   }

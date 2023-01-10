@@ -1,24 +1,6 @@
-import express from "express";
-import "express-async-errors";
-import { json } from "body-parser";
 import mongoose from "mongoose";
-import cookieSession from "cookie-session";
-import { api } from "./api";
-import { BadRequestError, errorHandler } from "./core";
-
-const app = express();
-app.set("trust proxy", true);
-
-app.use(json());
-app.use(
-  cookieSession({
-    signed: false,
-    secure: true,
-  })
-);
-
-app.use(api);
-app.use(errorHandler);
+import { app } from "./app";
+import { BadRequestError } from "./core";
 
 const start = async () => {
   if (!process.env.JWT_KEY) {

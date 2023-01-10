@@ -8,7 +8,6 @@ export const errorHandler = (
   next: NextFunction
 ) => {
   if (error instanceof BaseError) {
-    console.log(error);
     return response
       .status(error.statusCode)
       .send({ errors: error.serializeErrors() });

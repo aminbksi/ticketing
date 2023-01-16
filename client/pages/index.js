@@ -1,5 +1,18 @@
-const Landing = () => {
-  return <h1>Landing Page</h1>;
+import { checkUser } from "../api";
+
+const LandingPage = ({ currentUser }) => {
+  return currentUser ? (
+    <h1>You are signed in</h1>
+  ) : (
+    <h1>You are NOT signed in</h1>
+  );
 };
 
-export default Landing;
+LandingPage.getInitialProps = async (context) => {
+  const client = checkUser(context);
+  const { data } = await client.get("/api/users/current-user");
+
+  return data;
+};
+
+export default LandingPage;

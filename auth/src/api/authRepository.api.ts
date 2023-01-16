@@ -18,7 +18,6 @@ const api = express.Router();
 api.get(
   "/api/users/current-user",
   validateUser,
-  authRequired,
   (request: Request, response: Response) => {
     response.send({ currentUser: request.currentUser || null });
   }
@@ -61,7 +60,7 @@ api.post(
   }
 );
 
-api.get(
+api.post(
   "/api/users/signin",
   [
     body("email").isEmail().withMessage("Email must be valid"),
@@ -73,7 +72,6 @@ api.get(
   validateRequest,
   async (request: Request, response: Response) => {
     const { email, password } = request.body;
-
     const user = await User.findOne({ email });
     if (!user) {
       throw new BadRequestError("Bad Credentials");
@@ -100,7 +98,7 @@ api.get(
   }
 );
 
-api.get("/api/users/signout", (request: Request, response: Response) => {
+api.post("/api/users/signout", (request: Request, response: Response) => {
   request.session = null;
 
   response.send({});

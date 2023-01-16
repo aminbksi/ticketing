@@ -18,7 +18,6 @@ const api = express.Router();
 api.get(
   "/api/users/current-user",
   validateUser,
-  authRequired,
   (request: Request, response: Response) => {
     response.send({ currentUser: request.currentUser || null });
   }

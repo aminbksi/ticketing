@@ -1,14 +1,12 @@
 import express, { Request, Response } from "express";
 import { body } from "express-validator";
 import jwt from "jsonwebtoken";
+import { isCorrectPassword, User } from "../core";
 import {
-  authRequired,
   BadRequestError,
-  isCorrectPassword,
-  User,
   validateRequest,
   validateUser,
-} from "../core";
+} from "@itickey/common";
 
 const MIN_PASSWORD_CHARACTER = 4;
 const MAX_PASSWORD_CHARACTER = 20;
